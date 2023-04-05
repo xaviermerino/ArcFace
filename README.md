@@ -4,7 +4,9 @@ This repository contains a server and client to run extraction of facial templat
 
 ## 🖥️ Server 
 
-To launch the backend, you need to use the `server.sh` script. Some options available are shown in the table below: 
+To launch the backend, you need to use the `server.sh` script. You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
+
+Some options available are shown in the table below: 
 
 | Option              | Description                                        | Default         | Required |
 |---------------------|----------------------------------------------------|-----------------|----------|
@@ -24,7 +26,7 @@ As an example, for 1 container (1 GPU / 1 worker), with the data directory being
 
 ## 💻 Client
 
-To launch the client, you need to invoke `docker run`. 
+To launch the client, you need to invoke `docker run`. You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
 
 ```bash
 docker run --rm \
@@ -54,4 +56,4 @@ Alternatively, see the table below:
 | --dir       | Path to directory with images                | /data                                               | No       |
 | --output    | Directory where templates are saved          | /output                                             | No       |
 | --exclude   | Exclude images with no face detected         | False                                               | No       |
-| --extension | Allowed image extensions                     | '.jpeg',  '.jpg',  '.bmp', '.png', '.webp', '.tiff' | No       |
+| --extension | Allowed image extensions                     | '.jpeg'<br />'.jpg'<br />'.bmp'<br />'.png'<br />'.webp'<br />'.tiff' | No       |
