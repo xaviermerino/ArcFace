@@ -24,6 +24,8 @@ As an example, for 1 container (1 GPU / 1 worker), with the data directory being
 ./server.sh --data-path /path/to/sample/data
 ```
 
+The data path must be the same for the client and the server. 
+
 ## 💻 Client
 
 To launch the client, you need to invoke `docker run`. You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
