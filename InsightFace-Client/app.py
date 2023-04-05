@@ -156,9 +156,9 @@ if __name__ == "__main__":
     This client requires an already running Triton server with ArcFace + models. 
 
     Three modes are supported:
-    - embed_only    =>  Returns the ArcFace embeddings without performing face detection. Requires images to be 112x112.
-    - detect_only   =>  Performs face detection only! (Not Implemented)
-    - all           =>  Performs face detection and returns the ArcFace embeddings. Images can be of any size.
+    - embed_only    ►  Returns the ArcFace embeddings without performing face detection. Requires images to be 112x112.
+    - detect_only   ►  Performs face detection only! (Not Implemented)
+    - all           ►  Performs face detection and returns the ArcFace embeddings. Images can be of any size.
     
     By default, it will delete the contents of the output directory if it already exists!"""
 
