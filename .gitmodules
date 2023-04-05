@@ -1,0 +1,3 @@
+[submodule "InsightFace-Server"]
+	path = InsightFace-Server
+	url = https://github.com/SthPhoenix/InsightFace-REST
