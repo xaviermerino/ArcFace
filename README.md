@@ -13,7 +13,8 @@ Some options available are shown in the table below:
 | Option              | Description                                        | Default         | Required |
 |---------------------|----------------------------------------------------|-----------------|----------|
 | --start-port        | Starting port range for containers                 | 18081           | No       |
-| --gpus              | Number of gpus available for the server            | 1               | No       |
+| --gpus-start        | GPU device number to start with                    | 0               | No       |
+| --gpus              | Number of gpus, starting from gpus-start, to use   | 1               | No       |
 | --workers           | Number of backend processes per container          | 1               | No       |
 | --fp16              | Use half-point precision                           | True            | No       |
 | --detection-model   | Model use for face detection                       | scrfd_10g_gnkps | No       |
