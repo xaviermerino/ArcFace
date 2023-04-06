@@ -4,7 +4,9 @@ This repository contains a server and client to run extraction of facial templat
 
 ## 🖥️ Server 
 
-To launch the backend, you need to use the `server.sh` script. You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
+Note: You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
+
+To launch the backend, you need to use the `server.sh` script. 
 
 Some options available are shown in the table below: 
 
@@ -28,7 +30,15 @@ The data path must be the same for the client and the server.
 
 ## 💻 Client
 
-To launch the client, you need to invoke `docker run`. You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
+Note: You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
+
+Navigate to the `InsightFace-Client` directory first and then build the image.
+```
+cd InsightFace-Client
+docker build -t xavier/arcface:v0.8.2.0 .
+```
+
+To launch the client, you need to invoke `docker run`. 
 
 ```bash
 docker run --rm \
