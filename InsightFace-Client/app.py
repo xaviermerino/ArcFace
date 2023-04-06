@@ -126,7 +126,7 @@ class IFRClient:
                    msgpack=use_msgpack,
                    )
 
-        resp = self.sess.post(extract_uri, json=req, timeout=600)
+        resp = self.sess.post(extract_uri, json=req, timeout=7200)
         if resp.headers['content-type'] == 'application/x-msgpack':
             content = msgpack.loads(resp.content)
         else:
