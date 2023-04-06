@@ -3,7 +3,6 @@ import base64
 import logging
 import multiprocessing
 import os
-import shutil
 import time
 from distutils import util
 from functools import partial
@@ -14,8 +13,9 @@ import msgpack
 import numpy as np
 import requests
 import ujson
+import uuid
 from tqdm import tqdm
-
+from itertools import chain
 
 session = requests.Session()
 session.trust_env = False
@@ -148,7 +148,7 @@ class IFRClient:
                     if size > 20 and norm > 14:
                         save_crop(facedata, f'crops/{i}_{size}_{norm:2.0f}_{prob}.jpg')
 
-        return content
+        return (data, content)
 
 
 if __name__ == "__main__":
@@ -181,6 +181,7 @@ if __name__ == "__main__":
     Path(args.output).mkdir(exist_ok=True)
     (Path(args.output) / "templates").mkdir(exist_ok=True)
     (Path(args.output) / "summary").mkdir(exist_ok=True)
+
     template_directory = Path(args.output) / "templates"
     summary_directory = Path(args.output) / "summary"
     client = IFRClient(host=args.host, port=args.port)
@@ -220,47 +221,96 @@ if __name__ == "__main__":
         for chunk in to_chunks(files, args.batch)
     ]
 
-    _part_extract_vecs = partial(client.extract, extract_embedding=to_bool(embed),
-                                 embed_only=to_bool(embed_only), mode=mode,
-                                 limit_faces=0)
-
-
-    print("Allocating Empty Feature Vector...")
-    results = np.zeros(shape=(len(files), 512), dtype=np.float32)
-
     print("Processing Images / Batches ...")
     t0 = time.time()
     index = 0
-    pool = multiprocessing.Pool(args.threads)
-    for response in pool.map(_part_extract_vecs, im_batches):
-        response = response['data']
-        for r in response:
+
+    def write_results(results):
+        files, response = results
+        files = np.array(files)
+        features = np.zeros(shape=(len(files), 512), dtype=np.float32)
+
+        index = 0
+        for r in response["data"]:
             faces = r["faces"]
-            if faces: results[index] = faces[-1]["vec"]
+            if faces: features[index] = faces[-1]["vec"]
             index += 1
 
-    pool.close()
+        del response
+        
+        identifier = uuid.uuid4()
+        if args.exclude:
+            where_zeros = np.all(features == 0, axis=1)
+            features = features[~where_zeros]
+            removed_files = files[where_zeros]
+            files = files[~where_zeros]
+            missing_templates_filename = f"missing_templates_{identifier}.txt"
+            missing_templates_path = summary_directory / missing_templates_filename
+
+            if len(removed_files) > 0:
+                with open(missing_templates_path, "w") as f:
+                    for file in removed_files:
+                        f.write(Path(file).name + "\n")
+            
+            del removed_files
+
+        files = [Path(f) for f in files]
+        if len(files) > 0:
+            npylist = open(summary_directory / f"templates_{identifier}.txt", "w")
+            for index, file in enumerate(files):
+                file_path = str(Path(template_directory / (file.stem + ".npy")))
+                npylist.write(file.stem + ".npy" + "\n")
+                np.save(file_path, np.asarray(features[index]))
+            npylist.close()
+
+    with multiprocessing.Pool(processes=args.threads) as pool:
+        pbar = tqdm(total=len(im_batches))
+
+        arguments = (
+            {
+                "data": batch,
+                "extract_embedding": to_bool(embed),
+                "embed_only": to_bool(embed_only),
+                "mode": mode,
+                "limit_faces": 0
+            }
+            for batch in im_batches
+        )
+
+        async_results = [
+            pool.apply_async(client.extract, kwds=args, callback=write_results)
+            for args in arguments
+        ]
+            
+        for result in async_results:
+            result.wait()
+            pbar.update(1)
+
     t1 = time.time()
     took = t1 - t0
     speed = total / took
     print(f"Took: {took:.3f} s. ({speed:.3f} im/sec)")
 
-    print("Writing Templates...")
-    files = np.array(files)
-    if args.exclude:
-        where_zeros = np.all(results == 0, axis=1)
-        results = results[~where_zeros]
-        removed_files = files[where_zeros]
-        files = files[~where_zeros]
-        with open(summary_directory / "missing_templates.txt", "w") as f:
-            for file in removed_files:
-                f.write(str(file) + "\n")
+    print("\nCleaning up...")
+    missing_templates = [
+        f for f in list_files(str(summary_directory), ['.txt'])
+        if Path(f).name.startswith("missing_templates_")
+    ]
 
-        
-    npylist = open(summary_directory / "npylist.txt", "a")
-    files = [Path(f) for f in files]
-    for index, file in enumerate(tqdm(files)):
-        file_path = str(Path(template_directory / (file.stem + ".npy")))
-        npylist.write(file_path + "\n")
-        np.save(str(template_directory / (str(file.stem) + ".npy")), np.asarray(results[index]))
-    npylist.close()
+    found_templates = [
+        f for f in list_files(str(summary_directory), ['.txt'])
+        if Path(f).name.startswith("templates_")
+    ]
+
+    with open(summary_directory / "missing_templates.txt", "w") as f:
+        text = (open(str(f)).read() for f in missing_templates)
+        f.writelines(text)
+    
+    with open(summary_directory / "templates.txt", "w") as f:
+        text = (open(str(f)).read() for f in found_templates)
+        f.writelines(text)
+
+    for f in tqdm(chain(missing_templates, found_templates)):
+        Path(f).unlink(missing_ok=True)
+    
+    print("Done!")
