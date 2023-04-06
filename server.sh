@@ -6,6 +6,7 @@ TAG='v0.8.2.0'
 
 # Default values
 start_port=18081
+gpus_start=0
 gpus=1
 workers=1
 max_size=640,640
@@ -25,13 +26,14 @@ models_path=$PWD/models
 source_path=$PWD/InsightFace-Server/src
 
 # Parse named arguments
-ARGS=$(getopt -o '' -l start-port:,gpus:,workers:,fp16:,max-size:,detection-model:,detection-batch-size:,recognition-model:,recognition-batch-size:,mask-detector:,gender-age-model:,server:,return-face-data:,extract-embeddings:,detect-gender-age:,face-detection-threshold:,models-path:,source-path:,data-path: -- "$@")
+ARGS=$(getopt -o '' -l start-port:,gpus-start:,gpus:,workers:,fp16:,max-size:,detection-model:,detection-batch-size:,recognition-model:,recognition-batch-size:,mask-detector:,gender-age-model:,server:,return-face-data:,extract-embeddings:,detect-gender-age:,face-detection-threshold:,models-path:,source-path:,data-path: -- "$@")
 
 eval set -- "$ARGS"
 
 while true; do
   case "$1" in
     --start-port) start_port="$2"; shift 2 ;;
+    --gpus-start) gpus_start="$2"; shift 2 ;;
     --gpus) gpus="$2"; shift 2 ;;
     --workers) workers="$2"; shift 2 ;;
     --fp16) fp16="$2"; shift 2 ;;
@@ -169,7 +171,7 @@ echo
 
 p=0
 
-for i in $(seq 0 $(($gpus - 1)) ); do
+for i in $(seq $gpus_start $(($gpus_start + $gpus - 1)) ); do
     device='"device='$i'"';
     port=$((start_port + $p));
     name=$IMAGE-gpu$i-trt;
