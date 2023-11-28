@@ -132,21 +132,22 @@ class IFRClient:
         else:
             content = ujson.loads(resp.content)
 
-        images = content.get('data')
-        for im in images:
-            status = im.get('status')
-            if status != 'ok':
-                print(content.get('traceback'))
-                break
-            faces = im.get('faces', [])
-            for i, face in enumerate(faces):
-                norm = face.get('norm', 0)
-                prob = face.get('prob')
-                size = face.get('size')
-                facedata = face.get('facedata')
-                if facedata:
-                    if size > 20 and norm > 14:
-                        save_crop(facedata, f'crops/{i}_{size}_{norm:2.0f}_{prob}.jpg')
+        # images = content.get('data')
+        # print(images)
+        # for im in images:
+        #     status = im.get('status')
+        #     if status != 'ok':
+        #         print(content.get('traceback'))
+        #         break
+        #     faces = im.get('faces', [])
+        #     for i, face in enumerate(faces):
+        #         norm = face.get('norm', 0)
+        #         prob = face.get('prob')
+        #         size = face.get('size')
+        #         facedata = face.get('facedata')
+        #         if facedata:
+        #             if size > 20 and norm > 14:
+        #                 save_crop(facedata, f'crops/{i}_{size}_{norm:2.0f}_{prob}.jpg')
 
         return (data, content)
 
@@ -171,6 +172,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--mode", default="all", nargs='?', choices=['embed_only' ,'detect_only', 'all'], help="run in embed only or detect + embed mode")
     parser.add_argument('-o', '--output', type=str, help='directory where the templates are saved', default="/output")
     parser.add_argument('--exclude', action=argparse.BooleanOptionalAction, help="exclude images with no face detected")
+    parser.add_argument('--save-crops', action=argparse.BooleanOptionalAction, help="saves cropped faces when detected")
     parser.add_argument('-e', '--extension', nargs='+', help="allowed image extensions", default=['.jpeg', '.jpg', '.bmp', '.png', '.webp', '.tiff'])
     
     args = parser.parse_args()
@@ -181,9 +183,11 @@ if __name__ == "__main__":
     Path(args.output).mkdir(exist_ok=True)
     (Path(args.output) / "templates").mkdir(exist_ok=True)
     (Path(args.output) / "summary").mkdir(exist_ok=True)
+    (Path(args.output) / "crops").mkdir(exist_ok=True)
 
     template_directory = Path(args.output) / "templates"
     summary_directory = Path(args.output) / "summary"
+    crops_directory = Path(args.output) / "crops"
     client = IFRClient(host=args.host, port=args.port)
 
     if args.mode == "all":
@@ -232,8 +236,18 @@ if __name__ == "__main__":
 
         index = 0
         for r in response["data"]:
-            faces = r["faces"]
-            if faces: features[index] = faces[-1]["vec"]
+            face = r["faces"]
+            if face: 
+                face = face[-1]
+                norm = face.get('norm', 0)
+                size = face.get('size')
+                facedata = face.get('facedata')
+                if facedata and size > 20 and norm > 14:
+                    cropped_file = str(Path(crops_directory / (Path(files[index]).stem + ".jpg")))
+                    save_crop(facedata, cropped_file)
+
+                features[index] = face["vec"]
+
             index += 1
 
         del response
@@ -272,7 +286,8 @@ if __name__ == "__main__":
                 "extract_embedding": to_bool(embed),
                 "embed_only": to_bool(embed_only),
                 "mode": mode,
-                "limit_faces": 0
+                "limit_faces": 0,
+                "return_face_data": True if args.mode in ['all', 'detect_only'] and args.save_crops else False
             }
             for batch in im_batches
         )
