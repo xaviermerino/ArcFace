@@ -29,6 +29,8 @@ As an example, for 1 container (1 GPU / 1 worker), with the data directory being
 
 The data path must be the same for the client and the server. 
 
+> *Note:* If the container fails because it is missing the `pydantic` module, add its entry to the `InsightFace-Server/src/requirements.txt` file.
+
 ## 💻 Client
 
 Note: You must be part of the sudoers to run the code below without `sudo`. See here for [details](https://docs.docker.com/engine/install/linux-postinstall/).
