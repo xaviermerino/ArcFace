@@ -1,6 +1,7 @@
-# Ignoring downloaded models
-models/
+# Ignoring output and model folder
 output/
+models/onnx
+models/trt-engines
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
