@@ -204,7 +204,7 @@ for i in $(seq $gpus_start $(($gpus_start + $gpus - 1)) ); do
         -e DEF_EXTRACT_GA=$detect_gender_age\
         -e DEF_API_VER='2'\
         -v $models_path:/models\
-        -v $source_path/api_trt:/app\
+        -v $source_path:/app\
         -v $data_path:/data\
         --health-cmd='curl -f http://localhost:18080/info || exit 1'\
         --health-interval=1m\
