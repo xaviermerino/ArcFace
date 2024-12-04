@@ -81,6 +81,7 @@ recognition_models=(
     "glintr100" 
     "w600k_r50"
     "w600k_mbf"
+    "adaface_ir101_webface12m"
 )
 
 gender_age_models=(
