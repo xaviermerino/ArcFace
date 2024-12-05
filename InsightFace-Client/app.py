@@ -222,8 +222,8 @@ if __name__ == "__main__":
     total = len(files)
     print(f"Total files detected: {total}")
 
-    bbox_df: pd.DataFrame = pd.DataFrame({"image": [Path(file).name for file in files]},
-                                         columns=["image", "bbox"])
+    bbox_df: pd.DataFrame = pd.DataFrame(index=[Path(file).name for file in files],
+                                         columns=["bbox"])
 
     im_batches = [
         list(chunk)
@@ -247,12 +247,12 @@ if __name__ == "__main__":
                 face = face[-1]
                 if args.bbox:
                     bbox: str = str(face.get("bbox"))
-                    bbox_df.loc[bbox_df["image"] == filepath.name, "bbox"] = bbox
+                    bbox_df.loc[filepath.name, "bbox"] = bbox
                 norm = face.get('norm', 0)
                 size = face.get('size')
                 facedata = face.get('facedata')
                 if facedata and size > 20 and norm > 14:
-                    cropped_file = crops_directory / filepath.with_suffix(".jpg")
+                    cropped_file = crops_directory / filepath.with_suffix(".jpg").name
                     save_crop(facedata, cropped_file)
 
                 features[index] = face["vec"]
@@ -312,7 +312,7 @@ if __name__ == "__main__":
 
     if args.bbox:
         print("\nSaving bounding box data")
-        bbox_df.to_csv(f"{args.output}/bboxes.csv", index=False)
+        bbox_df.to_csv(f"{args.output}/bboxes.csv")
 
     t1 = time.time()
     took = t1 - t0
