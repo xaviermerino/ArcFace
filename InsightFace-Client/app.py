@@ -10,6 +10,7 @@ from itertools import chain, islice, cycle
 from pathlib import Path
 
 import msgpack
+import pandas as pd
 import numpy as np
 import requests
 import ujson
@@ -173,6 +174,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', type=str, help='directory where the templates are saved', default="/output")
     parser.add_argument('--exclude', action=argparse.BooleanOptionalAction, help="exclude images with no face detected")
     parser.add_argument('--save-crops', action=argparse.BooleanOptionalAction, help="saves cropped faces when detected")
+    parser.add_argument('--bbox', action=argparse.BooleanOptionalAction, help="saves face bounding box coordinates to a csv")
     parser.add_argument('-e', '--extension', nargs='+', help="allowed image extensions", default=['.jpeg', '.jpg', '.bmp', '.png', '.webp', '.tiff'])
     
     args = parser.parse_args()
@@ -220,6 +222,9 @@ if __name__ == "__main__":
     total = len(files)
     print(f"Total files detected: {total}")
 
+    bbox_df: pd.DataFrame = pd.DataFrame({"image": [Path(file).name for file in files]},
+                                         columns=["image", "bbox"])
+
     im_batches = [
         list(chunk)
         for chunk in to_chunks(files, args.batch)
@@ -237,13 +242,17 @@ if __name__ == "__main__":
         index = 0
         for r in response["data"]:
             face = r["faces"]
+            filepath: Path = Path(files[index])
             if face: 
                 face = face[-1]
+                if args.bbox:
+                    bbox: str = str(face.get("bbox"))
+                    bbox_df.loc[bbox_df["image"] == filepath.name, "bbox"] = bbox
                 norm = face.get('norm', 0)
                 size = face.get('size')
                 facedata = face.get('facedata')
                 if facedata and size > 20 and norm > 14:
-                    cropped_file = str(Path(crops_directory / (Path(files[index]).stem + ".jpg")))
+                    cropped_file = crops_directory / filepath.with_suffix(".jpg")
                     save_crop(facedata, cropped_file)
 
                 features[index] = face["vec"]
@@ -300,6 +309,10 @@ if __name__ == "__main__":
         for result in async_results:
             result.wait()
             pbar.update(1)
+
+    if args.bbox:
+        print("\nSaving bounding box data")
+        bbox_df.to_csv(f"{args.output}/bboxes.csv", index=False)
 
     t1 = time.time()
     took = t1 - t0

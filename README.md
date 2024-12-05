@@ -65,6 +65,7 @@ xavier/arcface:v0.8.2.0 -h
 ```
 
 Alternatively, see the table below:
+
 | Option      | Description                                  | Default                                             | Required |
 |-------------|----------------------------------------------|-----------------------------------------------------|----------|
 | --host      | Server hostname or IP                        | localhost                                           | No       |
@@ -74,5 +75,6 @@ Alternatively, see the table below:
 | --dir       | Path to directory with images                | /data                                               | No       |
 | --output    | Directory where templates are saved          | /output                                             | No       |
 | --exclude   | Exclude images with no face detected         | False                                               | No       |
-| --save-crops   | Saves crops when face detected         | False                                               | No       |
+| --save-crops| Saves crops when face detected               | False                                               | No       |
+| --bbox      | Saves face bounding box coordinates to a CSV | False                                               | No       |
 | --extension | Allowed image extensions                     | '.jpeg'<br />'.jpg'<br />'.bmp'<br />'.png'<br />'.webp'<br />'.tiff' | No       |
