@@ -236,8 +236,8 @@ if __name__ == "__main__":
 
         index = 0
         for r in response["data"]:
-            face = r["faces"]
-            if face: 
+            face = r.get("faces")
+            if face is not None:
                 face = face[-1]
                 norm = face.get('norm', 0)
                 size = face.get('size')
@@ -247,6 +247,8 @@ if __name__ == "__main__":
                     save_crop(facedata, cropped_file)
 
                 features[index] = face["vec"]
+            else:
+                features[index] = r.get("vec")
 
             index += 1
 
